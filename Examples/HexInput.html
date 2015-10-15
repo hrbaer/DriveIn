@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Hex Number Editing</title>
+  <script type="text/javascript" src="../Scripts/DriveIn.js"></script>
+  <style>
+  body {
+    font-family: sans-serif;
+    margin: 40px;
+  }
+  h1, h2, h3, p {
+    color: #ccc;
+  }
+  .driver {
+    font-size: 36pt;
+    font-family: "Courier New", monospace;
+    font-weight: 300;
+    outline: none;
+  }
+  .driver:hover {
+    cursor: default;
+  }
+  .field {
+    display: inline-block;
+    outline: none;
+  }
+  .field:hover {
+    cursor: pointer;
+  }
+  .field:focus {
+    color: #c00;
+  }
+  .view {
+    display: inline-block;
+  }
+  #date {
+    display: inline-block;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  #result {
+    font-size: 13pt;
+    color: #24a;
+  }
+  ::selection {
+    background: #e4e4e4;
+  }
+  ::-moz-selection {
+    background: #e4e4e4;
+  }
+  </style>
+
+  <script>
+
+  
+String.prototype.replaceAt = function(index, character) {
+    return this.substr(0, index) + character + this.substr(index + character.length);
+}
+
+window.onload = function() {
+
+  // A user defined object used to store current settings and to provide access functions.
+  
+  function hexHandler() {
+
+    var num = '0000';
+
+    function dec2hex(d) {
+      return d.toString(16).toLowerCase();
+    }
+
+    function showByte(offset) {
+      return num.charAt(offset);
+    }
+
+    function putByte(d, offset) {
+      d = parseHexDigit(d);
+      if (!isNaN(d)) {
+        num = num.replaceAt(offset, d.toString(16));
+      }
+    }
+
+    function pushByte(d, offset) {
+      var value = parseInt(num, 16) + (d << (3 - offset) * 4);
+      value = (value + 0x10000) % 0x10000;
+      num = padHex(value.toString(16));
+    }
+
+    function parseHexDigit(d) {
+      return Math.min(0xf, Math.max(0, parseInt(d, 16)));
+    }
+
+    function padHex(n) {
+      return ('0000' + dec2hex(n)).slice(-4);
+    }
+
+    var ext = {
+
+      showByte0: function() { return showByte(0); },
+      pushByte0: function(d) { pushByte(d, 0); },
+      putByte0: function(b) { putByte(b, 0) },
+  
+      showByte1: function() { return showByte(1); },
+      pushByte1: function(d) { pushByte(d, 1); },
+      putByte1: function(b) { putByte(b, 1) },
+  
+      showByte2: function() { return showByte(2); },
+      pushByte2: function(d) { pushByte(d, 2); },
+      putByte2: function(b) { putByte(b, 2) },
+  
+      showByte3: function() { return showByte(3); },
+      pushByte3: function(d) { pushByte(d, 3); },
+      putByte3: function(b) { putByte(b, 3) },
+
+      getNum: function() { return parseInt(num, 16); }
+    };
+
+    return ext;
+  }
+
+  var hh = hexHandler();
+
+  // The template used to construct the typer input and to enable communication between user and typer input.
+  var template = [[
+    { type: 'text', text: '#' },
+    { type: 'field', id: 'byte-0', show: hh.showByte0, push: hh.pushByte0, put: hh.putByte0 },
+    { type: 'field', id: 'byte-1', show: hh.showByte1, push: hh.pushByte1, put: hh.putByte1 },
+    { type: 'field', id: 'byte-2', show: hh.showByte2, push: hh.pushByte2, put: hh.putByte2 },
+    { type: 'field', id: 'byte-3', show: hh.showByte3, push: hh.pushByte3, put: hh.putByte3 }
+   ]];
+  
+  // Create the typer input element
+  var hi = driveIn('.driver#hex')
+    .template(template)
+    .domElement
+    .addEventListener('change', function(evt) { showResult(evt.detail.asData); });
+
+  // Show the result
+  function showResult(v) {
+    document.querySelector('#result').textContent = hh.getNum();
+  }
+
+}
+
+  </script>
+
+  </head>
+<body>
+
+  <h1>Hex Number Editing</h1>
+  <p>
+    Fast hex number editing by clicking, scrolling and typing.
+  </p>
+  
+  <div class="driver" id="hex"></div>
+
+  <h3>Value</h3>
+  <pre id="result"></pre>
+
+</body>
+</html>
