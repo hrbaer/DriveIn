@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>The Universe</title>
+  <script type="text/javascript" src="../Scripts/DriveIn.js"></script>
+  <style>
+  body {
+    font-family: sans-serif;
+    margin: 40px;
+  }
+  h1, h2, h3, p {
+    color: #ccc;
+  }
+  .menu {
+    display: inline-block;
+    font-size: 12pt;
+    font-family: inherit;
+    font-weight: 300;
+    padding: 0.2em 0.5em 0.2em 0em;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    outline: none;
+  }
+  .menu:hover {
+    cursor: default;
+  }
+  .field {
+    display: inline-block;
+    outline: none;
+  }
+  .field:hover {
+    cursor: pointer;
+  }
+  .field:focus {
+    color: #c00;
+  }
+  .view {
+    display: inline-block;
+    margin-left: 0.4em;
+    margin-right: 0.4em;
+  }
+  .hidden {
+    display: none;
+  }
+  #result {
+    font-size: 10pt;
+    color: #24a;
+  }
+  ::selection {
+    background: #e4e4e4;
+  }
+  ::-moz-selection {
+    background: #e4e4e4;
+  }
+  </style>
+
+  <script>
+  
+window.onload = function() {
+
+  var menus = { menus: [
+    { name: 'Universe', menus: [
+      { name: 'Milky Way', menus: [
+        { name: 'Solar System', menus: [
+          { name: 'Planets', menus: [
+            { name: 'Mercury' },
+            { name: 'Venus' },
+            { name: 'Earth', menus: [
+              { name: 'Moon' },
+              { name: 'Continents', menus: [
+                { name: 'Africa' },
+                { name: 'America', menus: [
+                  { name: 'North America' },
+                  { name: 'South America' }
+                ]},
+                { name: 'Antarctica' },
+                { name: 'Asia' },
+                { name: 'Australia' },
+                { name: 'Europe', menus: [
+                  { name: 'Countries', menus: [
+                    { name: 'Albania' },
+                    { name: 'Andorra' },
+                    { name: 'Armenia' },
+                    { name: 'Austria' },
+                    { name: 'Azerbaijan' },
+                    { name: 'Belarus' },
+                    { name: 'Belgium' },
+                    { name: 'Bosnia and Herzegovina' },
+                    { name: 'Bulgaria' },
+                    { name: 'Croatia' },
+                    { name: 'Cyprus' },
+                    { name: 'Czech Republic' },
+                    { name: 'Denmark' },
+                    { name: 'Estonia' },
+                    { name: 'Finland' },
+                    { name: 'France' },
+                    { name: 'Georgia' },
+                    { name: 'Germany' },
+                    { name: 'Greece' },
+                    { name: 'Hungary' },
+                    { name: 'Iceland' },
+                    { name: 'Ireland' },
+                    { name: 'Italy' },
+                    { name: 'Kazakhstan' },
+                    { name: 'Kosovo' },
+                    { name: 'Latvia' },
+                    { name: 'Liechtenstein' },
+                    { name: 'Lithuania' },
+                    { name: 'Luxembourg' },
+                    { name: 'Macedonia' },
+                    { name: 'Malta' },
+                    { name: 'Moldova' },
+                    { name: 'Monaco' },
+                    { name: 'Montenegro' },
+                    { name: 'Netherlands' },
+                    { name: 'Norway' },
+                    { name: 'Poland' },
+                    { name: 'Portugal' },
+                    { name: 'Romania' },
+                    { name: 'Russia' },
+                    { name: 'San Marino' },
+                    { name: 'Serbia' },
+                    { name: 'Slovakia' },
+                    { name: 'Slovenia' },
+                    { name: 'Spain' },
+                    { name: 'Sweden' },
+                    { name: 'Switzerland' },
+                    { name: 'Turkey' },
+                    { name: 'Ukraine' },
+                    { name: 'United Kingdom' },
+                    { name: 'Vatican City' }
+                  ]}
+                ]}
+              ]}
+            ]},
+            { name: 'Mars' },
+            { name: 'Jupiter' },
+            { name: 'Saturn' },
+            { name: 'Uranus' },
+            { name: 'Neptune' }
+          ]}
+        ]}
+      ] },
+    ]}
+  ]};
+  
+  // Calculate the number of menu levels
+  function numMenuLevels(menu) {
+    var levels = 0;
+    function menuLevels(m, l) {
+      if (m) {
+        for (var i = 0; i < m.length; ++i) {
+          menuLevels(m[i].menus, l + 1);
+        }
+      }
+      else {
+        levels = Math.max(levels, l);
+      }
+    }
+    menuLevels(menu.menus, levels);
+    return levels;
+  }
+  
+  // Get the menu
+  function getMenu() {
+    var menu = menus;
+    while (menu.sel !== undefined) {
+      menu = menu.menus[menu.sel];
+    }
+    return menu;
+  }
+    
+  // A user defined object used to store current settings and to provide access functions.
+  function menuHandler() {
+    
+    function getMenus_(level) {
+      var m = menus;
+      while (level > 0) {
+        if (m.sel === undefined) { return }
+        m = m.menus[m.sel];
+        level -= 1;
+      }
+      return m;
+    }
+    
+    function showMenu_(level) {
+      var m = getMenus_(level);
+      if (m && m.menus) {
+        if (m.sel === undefined) { m.sel = 0 }
+        return m.menus[m.sel].name;
+      }
+    }
+    
+    function pushMenu_(level, d) {
+      var m = getMenus_(level);
+      m.sel += 1;
+      while (m.sel < 0) { m.sel += m.menus.length; };
+      m.sel = m.sel % m.menus.length;
+    }
+    
+    function putMenu_(level, name) {
+      var m = getMenus_(level);
+      for (var i = 0; i < m.menus.length; ++i) {
+        var menu = m.menus[i];
+        if (menu.name.match(new RegExp('^' + name, 'i'))) {
+          m.sel = i;
+          break;
+        }
+      }
+    }
+    
+    function showSymbol_(level) {
+      var m = getMenus_(level);
+      if (m && m.menus) {
+        return '‣';
+      }
+    }
+        
+    return function(level) {
+      return {
+        showMenu: function() {
+          return showMenu_(level);
+        },
+        pushMenu: function(d) {
+          pushMenu_(level, d);
+        },
+        putMenu: function(d) {
+          putMenu_(level, d);
+        },
+        showSymbol: function() {
+          return showSymbol_(level);
+        }
+      }
+    }
+
+  }
+
+  var mh = menuHandler();
+  var levels = numMenuLevels(menus);
+  var template = [];
+  for (var i = 0; i < levels; ++i) {
+    template.push({ type: 'view', show: mh(i).showSymbol });
+    template.push({ type: 'field', id: 'menu' + i, show: mh(i).showMenu, push: mh(i).pushMenu, put: mh(i).putMenu });
+  }
+  
+  // Create the driver input element
+  var menu = driveIn('.menu#test').template(template);
+  menu.domElement.addEventListener('change', function(evt) { showResult(evt.detail.asData); });
+  menu.domElement.addEventListener('click', function(evt) { alert('Selection: ' + getMenu().name); });
+
+  // Show the result
+  function showResult(selection) {
+    document.getElementById('result').textContent = JSON.stringify(selection, null, 4);
+  }
+
+}
+
+  </script>
+
+  </head>
+<body>
+
+  <h1>The Universe</h1>
+  <p>
+    Browse the whole universe.
+  </p>
+  
+  <div class="menu" id="test"></div>
+
+  <h3>Current Selection</h3>
+  <pre id="result"></pre>
+
+</body>
+</html>
