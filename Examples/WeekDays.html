@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Days of the Week</title>
+  <script type="text/javascript" src="../Scripts/DriveIn.js"></script>
+  <style>
+  body {
+    font-family: sans-serif;
+    margin: 40px;
+  }
+  h1, h2, h3, p {
+    color: #ccc;
+  }
+  .driver {
+    font-size: 24pt;
+    font-family: inherit;
+    font-weight: 300;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    outline: none;
+  }
+  .driver:hover {
+    cursor: default;
+  }
+  .field {
+    display: inline-block;
+    outline: none;
+  }
+  .field:hover {
+    cursor: pointer;
+  }
+  .field:focus {
+    color: #c00;
+  }
+  #date {
+    display: inline-block;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  #result {
+    font-size: 13pt;
+    color: #24a;
+  }
+  ::selection {
+    background: #e4e4e4;
+  }
+  ::-moz-selection {
+    background: #e4e4e4;
+  }
+  </style>
+
+  <script>
+
+  
+  
+window.onload = function() {
+
+  // The names of the week and the months we are using.
+  var weekDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  
+  // A user defined object used to store current settings and to provide access functions.
+  function dateTime() {
+
+    var date = new Date();
+    var lastWeekday;
+    
+    function saveWeekday() {
+      lastWeekday = date.getDay();
+    }
+    saveWeekday();
+    
+    function preserveWeekday() {
+      var days = lastWeekday - date.getDay();
+      days = days < -3 ? days + 7 : days > 3 ? days - 7 : days;
+      ext.pushWeekday(days);
+      saveWeekday();
+    }
+    
+    var ext = {
+
+      showWeekDayName: function() {
+        return weekDayNames[date.getDay()];
+      },
+  
+      putWeekday: function(day) {
+        for (var i in weekDayNames) {
+          if (weekDayNames.hasOwnProperty(i)) {
+            var name = weekDayNames[i];
+            if (name.match(new RegExp('^' + day, 'i'))) {
+              day = i;
+              var days = day - date.getDay()
+              ext.pushWeekday(days);
+              break;
+            }
+          }
+        }
+      },
+  
+      pushWeekday: function(days) {
+        date.setDate(date.getDate() + days);
+      },
+  
+      showYear: function() {
+        return date.getFullYear();
+      },
+  
+      putYear: function(year) {
+        year = +year;
+        if (!isNaN(year)) {
+          saveWeekday();
+          date.setFullYear(year);
+          preserveWeekday();
+        }
+      },
+  
+      pushYear: function(years) {
+        saveWeekday();
+        ext.putYear(date.getFullYear() + years);
+        preserveWeekday();
+      },
+  
+      showMonth: function() {
+        return date.getMonth();
+      },
+  
+      showMonthName: function() {
+        return monthNames[date.getMonth()];
+      },
+  
+      putMonth: function(month) {
+        if (!isNaN(+month)) {
+          month = +month - 1;
+        }
+        else {
+          for (var i in monthNames) {
+            if (monthNames.hasOwnProperty(i)) {
+              var name = monthNames[i];
+              if (name.match(new RegExp('^' + month, 'i'))) {
+                month = i;
+                break;
+              }
+            }
+          }
+        }
+        if (!isNaN(month)) {
+          saveWeekday();
+          date.setMonth(month);
+          preserveWeekday();
+        }
+      },
+  
+      pushMonth: function(months) {
+        saveWeekday();
+        date.setMonth(date.getMonth() + months);
+        preserveWeekday();
+      },
+
+      showDay: function() {
+        return date.getDate();
+      },
+  
+      putDay: function(day) {
+        day = +day;
+        if (!isNaN(day)) {
+          date.setDate(day);
+        }
+      },
+  
+      pushDay: function(days) {
+        ext.putDay(date.getDate() + 7 * days);
+      }
+      
+    };
+    return ext;
+  }
+
+  var date = dateTime();
+
+  // The template used to construct the input control and to enable communication between user and the input control.
+  var template = [[
+    { type: 'field', id: 'weekday', show: date.showWeekDayName, push: date.pushWeekday, put: date.putWeekday },
+    { type: 'text', text: ', ' },
+    { type: 'field', id: 'month', show: date.showMonthName, push: date.pushMonth, put: date.putMonth },
+    { type: 'text', text: ' ' },
+    { type: 'field', id: 'day', show: date.showDay, push: date.pushDay, put: date.putDay },
+    { type: 'text', text: ', ' },
+    { type: 'field', id: 'year', show: date.showYear, push: date.pushYear, put: date.putYear }
+  ]];
+  
+  // Create the driver input element
+  driveIn('.driver#date')
+    .template(template)
+    .domElement
+    .addEventListener('change', function(evt) { showResult(evt.detail.asData); });
+
+  // Show the result
+  function showResult(time) {
+    document.getElementById('result').textContent = JSON.stringify(time);
+  }
+
+}
+
+  </script>
+
+  </head>
+<body>
+
+  <h1>Days of the Week</h1>
+  <p>
+    Want to quickly browse through all Sundays of a month or a year?
+    Or any other day of the week?
+  <br>
+    Have a look at this calendar organized by days of the week.
+  </p>
+  
+  <div class="driver" id="date"></div>
+
+  <h3>Selected Date</h3>
+  <pre id="result"></pre>
+
+</body>
+</html>
