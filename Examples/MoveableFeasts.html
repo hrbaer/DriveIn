@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Moveable Feasts</title>
+  <script type="text/javascript" src="../Scripts/DriveIn.js"></script>
+  <script type="text/javascript" src="../scripts/EasterDate.js"></script>
+  <style>
+  body {
+    font-family: sans-serif;
+    margin: 40px;
+  }
+  h1, h2, h3, p {
+    color: #ccc;
+  }
+  .driver {
+    font-size: 24pt;
+    font-family: inherit;
+    font-weight: 300;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    outline: none;
+  }
+  .driver:hover {
+    cursor: default;
+  }
+  .field {
+    display: inline-block;
+    outline: none;
+  }
+  .field:hover {
+    cursor: pointer;
+  }
+  .field:focus {
+    color: #c00;
+  }
+  .view {
+    display: inline-block;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  #date {
+    display: inline-block;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  #result {
+    font-size: 13pt;
+    color: #24a;
+  }
+  ::selection {
+    background: #e4e4e4;
+  }
+  ::-moz-selection {
+    background: #e4e4e4;
+  }
+  </style>
+
+  <script>
+
+  
+  
+window.onload = function() {
+
+  // The names of the feasts and the months we are using.
+  var feastNames = ['Ash Wednesday', 'Good Friday', 'Easter Day', 'Ascension Day', 'Pentecost'];
+  var monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  // Number of days with respect to Easter Sunday.
+  var dayDiffs = [-46, -2, 0, 39, 49];
+  
+  // A user defined object used to store current settings and to provide access functions.
+  function dateTime() {
+
+    var date = new Date();
+    var feastIndex = 2;
+    
+    function setDate(year) {
+      var easter = easterDate(year);
+      date = new Date(0);
+      date.setFullYear(year);
+      date.setMonth(easter.m - 1);
+      date.setDate(easter.d + dayDiffs[feastIndex]);
+      date.setHours(12);
+      date.setMinutes(0);
+      date.setSeconds(0);
+    };
+    
+    setDate(date.getFullYear());
+    
+    var ext = {
+
+      showFeastName: function() {
+        return feastNames[feastIndex];
+      },
+  
+      putFeast: function(name) {
+        for (var i = 0; i < feastNames.length; ++i) {
+          var feastName = feastNames[i];
+          if (feastName.match(new RegExp('^' + name, 'i'))) {
+            feastIndex = i;
+            setDate(date.getFullYear());
+            break;
+          }
+        }
+      },
+  
+      pushFeast: function(i) {
+        feastIndex = (feastIndex + feastNames.length + i) % feastNames.length;
+        setDate(date.getFullYear());
+      },
+  
+      showYear: function() {
+        return date.getFullYear();
+      },
+  
+      putYear: function(year) {
+        year = +year;
+        if (!isNaN(year)) {
+          setDate(year);
+        }
+      },
+  
+      pushYear: function(years) {
+        ext.putYear(date.getFullYear() + years);
+      },
+  
+      showMonth: function() {
+        return date.getMonth();
+      },
+  
+      showMonthName: function() {
+        return monthNames[date.getMonth()];
+      },
+      
+      showDay: function() {
+        return date.getDate();
+      }
+        
+    };
+    return ext;
+  }
+
+  var date = dateTime();
+
+  // The template used to construct the Drive-In and to enable communication between user and Drive-In.
+  var template = [[
+    { type: 'field', id: 'feast', show: date.showFeastName, push: date.pushFeast, put: date.putFeast },
+    { type: 'text', text: ' ' },
+    { type: 'field', id: 'year', show: date.showYear, push: date.pushYear, put: date.putYear },
+    { type: 'text', text: ': ' },
+    { type: 'view', id: 'month', show: date.showMonthName },
+    { type: 'text', text: ' ' },
+    { type: 'view', id: 'day', show: date.showDay }
+  ]];
+  
+  // Create the Drive-In
+  var ti = driveIn('.driver#date')
+    .template(template)
+    .domElement
+    .addEventListener('change', function(evt) { showResult(evt.detail.asData); });
+
+  // Show the result
+  function showResult(time) {
+    document.getElementById('result').textContent = JSON.stringify(time);
+  }
+
+}
+
+  </script>
+
+  </head>
+  <body>
+
+  <h1>Moveable Feasts</h1>
+  <p>
+    When was Easter two years ago? What will be the date of Pentecost next year?
+  <br>
+    Find out quickly by clicking, scrolling and typing.
+  </p>
+  
+  <div class="driver" id="date"></div>
+
+  <h3>Current Selection</h3>
+  <pre id="result"></pre>
+
+</body>
+</html>
