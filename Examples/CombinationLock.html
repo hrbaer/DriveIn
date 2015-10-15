@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Combination Lock</title>
+  <script type="text/javascript" src="../Scripts/DriveIn.js"></script>
+  <style>
+  body {
+    font-family: "Helvetica Neue", sans-serif;
+    margin: 40px;
+  }
+  h1, h2, h3, p {
+    color: #ccc;
+  }
+  .typer {
+    font-size: 144pt;
+    font-family: inherit;
+    font-weight: 300;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    outline: none;
+    margin: 16px 0px 16px 0px;
+  }
+  .typer:hover {
+    cursor: default;
+  }
+  .field {
+    display: inline-block;
+    outline: none;
+  }
+  .field:hover {
+    cursor: pointer;
+  }
+  .field:focus {
+    color: #c00;
+  }
+  #lock {
+    display: inline-block;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  #result {
+    font-size: 13pt;
+    color: #24a;
+  }
+  #congratulation {
+    font-size: 200%;
+    padding: 60px;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    background: white;
+    display: none;
+    cursor: pointer;
+  }
+  ::selection {
+    background: #e4e4e4;
+  }
+  ::-moz-selection {
+    background: #e4e4e4;
+  }
+  </style>
+
+<script>
+
+window.onload = function() {
+  
+  var numDigits = 4;
+  
+  // Handling of digits
+  function digit() {
+
+    var dig = 0;
+    
+    function normalize() {
+      dig = ('' + dig).match(/[0-9]/) ? dig : 0;
+      while (dig < 0) { dig += 10; }
+      dig = dig % 10;
+    }
+    
+    var ext = {
+
+      showDigit: function() {
+        return dig;
+      },
+    
+      putDigit: function(d) {
+        dig = +d;
+        return ext;
+      },
+    
+      pushDigit: function(d) {
+        dig += d;
+        normalize();
+      }
+      
+    };
+    
+    return ext;
+  }
+
+  // The Combination Lock
+  function combinationLock(num) {
+    
+    var template = [[]];
+    var code;
+    
+    function createDigitTemplate(id, dig) {
+      return { type: 'field', id: id, show: dig.showDigit, push: dig.pushDigit, put: dig.putDigit };
+    }
+    
+    for (i = 0; i < num; ++i) {
+      var id = 'dig-' + i;;
+      var dig = digit().putDigit(i);
+      template[0].push(createDigitTemplate(id, dig));
+    };
+    
+    return {
+      getTemplate: function() { return template; },
+      newLock: function() {
+        code = '';
+        template[0].forEach(function(t) {
+          t.put(10 * Math.random() | 0);
+          code += 10 * Math.random() | 0;
+        });
+        console.log(code);
+      },
+      getCode: function() {
+        return code;
+      }
+    };
+  }
+  
+  var combination = combinationLock(numDigits);
+  
+  var lock = driveIn('.typer#lock').template(combination.getTemplate());
+  lock.domElement
+    .addEventListener('change', function(evt) {
+      showResult(evt.detail.asData);
+      if (combination.getCode() === evt.detail.asString) {
+        document.getElementById('congratulation').style.display = 'block';
+        combination.newLock();
+        lock.update();
+      }
+    });
+
+  document.getElementById('congratulation').addEventListener('click', function(evt) {
+    this.style.display = 'none';
+  });
+
+  combination.newLock();
+  lock.update();
+
+  // Show the result
+  function showResult(position) {
+    document.getElementById('result').textContent = JSON.stringify(position);
+  }
+
+}
+
+</script>
+
+</head>
+<body>
+
+  <h1>Combination Lock</h1>
+  <p>
+    Try to pick the lock.
+  </p>
+  
+  <div class="typer" id="lock"></div>
+
+  <h3>Combination</h3>
+  <pre id="result"></pre>
+
+  <div id="congratulation">
+    <h1>Congratulation</h1>
+    <p>You have successfully picked the code!</p>
+  </div>
+
+</body>
+</html>
