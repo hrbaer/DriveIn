@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Enter Coordinates</title>
+  <script type="text/javascript" src="../Scripts/DriveIn.js"></script>
+  <style>
+  body {
+    font-family: "Helvetica Neue", sans-serif;
+    margin: 40px;
+  }
+  h1, h2, h3, p {
+    color: #ccc;
+  }
+  .coordinates {
+    display: inline-block;
+    font-size: 24pt;
+    font-family: inherit;
+    font-weight: 300;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    outline: none;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .driver {
+    display: inline-block;
+  }
+  .driver:hover {
+    cursor: default;
+  }
+  .field {
+    display: inline-block;
+    outline: none;
+  }
+  .field:hover {
+    cursor: pointer;
+  }
+  .field:focus {
+    color: #c00;
+  }
+  #position {
+    display: inline-block;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  #coords {
+    font-size: 13pt;
+    color: #24a;
+  }
+  ::selection {
+    background: #e4e4e4;
+  }
+  ::-moz-selection {
+    background: #e4e4e4;
+  }
+  </style>
+
+  <script>
+
+// A user-defined object used to store current settings and to provide access functions.
+
+window.onload = function() {
+    
+  function position(options) {
+
+    var secs = 0;
+  
+    var pad = function(val) {
+      return '00'.concat(val).slice(-2);
+    }
+  
+    function dms2s(d, m, s) {
+      console.log(arguments);
+      var s0 = (d * 60 + m) * 60 + s;
+      console.log(s0);
+      dir = s0 < 0 ? 'S' : s0 > 0 ? 'N' : ' ';
+      return Math.max(-90 * 3600, Math.min(90 * 3600, s0));
+    }
+  
+    function s2d(s) { return s / 3600 | 0; }
+  
+    function s2m(s) { return s / 60 % 60 | 0; }
+  
+    function s2s(s) { return s % 60 | 0; }
+  
+    function sign() { return secs < 0 ? -1 : 1; }
+  
+    function normalize() {
+      if (options) {
+        if (options.range) {
+          var min = 3600 * options.range[0], max = 3600 * options.range[1];
+          if (options.wrap === true) {
+            while (secs < min) { secs += max - min; };
+            secs = (secs - min) % (max - min) + min;
+          }
+          else {
+            secs = Math.max(min, Math.min(max, secs));
+          }
+        }
+      }
+    }
+    var ext = {
+
+      showDegrees: function() {
+        return Math.abs(s2d(secs));
+      },
+    
+      putDegrees: function(d) {
+        d = +d | 0;
+        if (!isNaN(+d)) {
+          secs += 3600 * (sign() * d - s2d(secs));
+          normalize();
+        }
+      },
+    
+      pushDegrees: function(d) {
+        secs += d * 3600;
+        normalize();
+      },
+    
+      showMinutes: function() {
+        return pad(Math.abs(s2m(secs)));
+      },
+    
+      putMinutes: function(m) {
+        m = +m | 0;
+        if (!isNaN(m)) {
+          secs += 60 * (sign() * m - s2m(secs));
+          normalize();
+        }
+      },
+    
+      pushMinutes: function(m) {
+        secs += m * 60;
+        normalize();
+      },
+    
+      showSeconds: function() {
+        return pad(Math.abs(s2s(secs)));
+      },
+    
+      putSeconds: function(s) {
+        s = +s | 0;
+        if (!isNaN(+s)) {
+          secs += sign() * s - s2s(secs);
+          normalize();
+        }
+      },
+    
+      pushSeconds: function(s) {
+        secs += s;
+        normalize();
+      },
+    
+      showDir: function() {
+        if (options) {
+          var dir = options.dir || [ '+', '-' ];
+          return secs < 0 ? dir[0] : secs > 0 ? dir[1] : ' ';
+        }
+        return '?';
+      },
+    
+      putDir: function(dir) {
+        if (dir && options && options.dir) {
+          var result = options.dir.filter(function(v) {
+            return dir.match(new RegExp('^' + v, 'i'))
+          })[0];
+          secs = result ? options.dir[0] === result ? -Math.abs(secs) : Math.abs(secs) : secs;
+        }
+      },
+    
+      pushDir: function(s) {
+        secs = -secs;
+      },
+    
+      putDecimal: function(d) {
+        ext.setValue(d);
+      },
+      
+      showDecimal: function() {
+        return (secs / 3600).toFixed(6);
+      },
+      
+      setValue: function(value) {
+        secs = value * 3600;
+        normalize();
+        return ext;
+      }
+
+    };
+    
+    return ext;
+  }
+
+  function getTemplate(pos, mod) {
+    return [[
+      { type: 'field', id: 'deg' + mod, show: pos.showDegrees, push: pos.pushDegrees, put: pos.putDegrees },
+      { type: 'text', text: '°' },
+      { type: 'field', id: 'min' + mod, show: pos.showMinutes, push: pos.pushMinutes, put: pos.putMinutes },
+      { type: 'text', text: "'" },
+      { type: 'field', id: 'sec' + mod, show: pos.showSeconds, push: pos.pushSeconds, put: pos.putSeconds },
+      { type: 'text', text: '" ' },
+      { type: 'field', id: 'dir' + mod, show: pos.showDir, push: pos.pushDir, put: pos.putDir }
+    ], [
+      { type: 'field', id: 'dec' + mod, show: pos.showDecimal, put: pos.putDecimal },
+      { type: 'text', text: '°' }
+    ]];
+  }
+
+    
+  // Create the driver input element
+
+  var posLat = position({ range: [ -90, 90 ], dir: [ 'S', 'N' ], wrap: false }).setValue(47.27055);
+  var posLon = position({ range: [ -180, 180 ], dir: [ 'W', 'E' ], wrap: true }).setValue(8.641388);
+
+  var lat = driveIn('.driver#latitude').template(getTemplate(posLat, '-lat'));
+  lat.domElement.addEventListener('change', function(evt) { showCoordinates(evt.detail.asData); });
+
+  var lon = driveIn('.driver#longitude').template(getTemplate(posLon, '-lon'))
+  lon.domElement.addEventListener('change', function(evt) { showCoordinates(evt.detail.asData); });
+
+  // Show the coordinates
+  function showCoordinates(position) {
+    document.getElementById('coords').textContent = JSON.stringify(position);
+  }
+
+  if (navigator.geolocation)  {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      posLat.setValue(+position.coords.latitude);
+      posLon.setValue(+position.coords.longitude);
+      lat.update();
+      lon.update();
+    }, function(err) {
+      console.log("Geo location not accessible", err);
+    });
+  }
+
+}
+
+  </script>
+
+</head>
+<body>
+
+  <h1>Enter Coordinates</h1>
+  <p>
+    Navigate in space by scrolling, typing and using arrows.
+    Use shift key and click to switch between decimal and sexagesimal degrees.
+  </p>
+  
+  <div class="coordinates">
+    Latitude:
+    <div class="driver" id="latitude"></div>,
+    Longitude:
+    <div class="driver" id="longitude"></div>
+  </div>
+
+  <h3>Selected Coordinates</h3>
+  <pre id="coords"></pre>
+
+</body>
+</html>
