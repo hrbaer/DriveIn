@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Choosing a Date in a Text</title>
+  <script type="text/javascript" src="../Scripts/DriveIn.js"></script>
+  <style>
+  body {
+    font-family: sans-serif;
+    margin: 40px;
+  }
+  h1, h2, h3 {
+    color: #ccc;
+  }
+  .section {
+    font-size: 16pt;
+  }
+  .driver {
+    font-family: inherit;
+    outline: none;
+  }
+  .driver:hover {
+    cursor: default;
+  }
+  .field {
+    display: inline-block;
+    font-weight: bold;
+    outline: none;
+  }
+  .field:hover {
+    cursor: pointer;
+  }
+  .field:focus {
+    color: #c00;
+  }
+  #date {
+    display: inline;
+  }
+  #result {
+    font-size: 13pt;
+    color: #24a;
+  }
+  ::selection {
+    background: #e4e4e4;
+  }
+  ::-moz-selection {
+    background: #e4e4e4;
+  }
+  </style>
+
+  <script>
+
+  
+  
+window.onload = function() {
+
+  // The names of the months we are using.
+  var monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var dayNames = [
+    'First', 
+    'Second', 
+    'Third', 
+    'Fourth', 
+    'Fifth', 
+    'Sixth', 
+    'Seventh', 
+    'Eighth', 
+    'Ninth', 
+    'Tenth', 
+    'Eleventh', 
+    'Twelfth', 
+    'Thirteenth', 
+    'Fourteenth', 
+    'Fifteenth', 
+    'Sixteenth', 
+    'Seventeenth', 
+    'Eighteenth', 
+    'Nineteenth', 
+    'Twentieth', 
+    'Twenty-first',
+    'Twenty-second',
+    'Twenty-third',
+    'Twenty-fourth',
+    'Twenty-fifth',
+    'Twenty-sixth',
+    'Twenty-seventh',
+    'Twenty-eighth',
+    'Twenty-ninth',
+    'Thirtieth',
+    'Thirty-first',
+  ];
+  
+  // A user defined object used to store current settings and to provide access functions.
+  
+  function dateTime() {
+
+    var date = new Date(0);
+  
+    var pad = function(val) {
+      return '00'.concat(val).slice(-2);
+    }
+
+    var ext = {
+
+      showYear: function() {
+        return date.getFullYear();
+      },
+  
+      putYear: function(year) {
+        if (!isNaN(+year)) {
+          date.setFullYear(year);
+        }
+      },
+  
+      pushYear: function(years) {
+        ext.putYear(date.getFullYear() + years);
+      },
+  
+      getMonth: function() {
+        return date.getMonth();
+      },
+  
+      showMonthName: function() {
+        return monthNames[date.getMonth()];
+      },
+  
+      putMonth: function(month) {
+        if (!isNaN(+month)) {
+          month = +month - 1;
+        }
+        else {
+          for (var i = 0; i < monthNames.length; ++i) {
+            var name = monthNames[i];
+            if (name.match(new RegExp('^' + month, 'i'))) {
+              month = i;
+              break;
+            }
+          }
+        }
+        if (!isNaN(+month)) {
+          date.setMonth(month);
+        }
+      },
+  
+      pushMonth: function(months) {
+        date.setMonth(date.getMonth() + months);
+      },
+
+      getDay: function() {
+        return date.getDate();
+      },
+  
+      showDayName: function() {
+        return dayNames[date.getDate() - 1];
+      },
+
+      putDay: function(day) {
+        if (isNaN(+day)) {
+          for (var i = 0; i < dayNames.length; ++i) {
+            var name = dayNames[i];
+            if (name.match(new RegExp('^' + day, 'i'))) {
+              day = 1 + i;
+              break;
+            }
+          }
+        }
+        if (!isNaN(+day)) {
+          date.setDate(day);
+        }
+      },
+  
+      pushDay: function(days) {
+        ext.putDay(date.getDate() + days);
+      }
+      
+    };
+    return ext;
+  }
+
+  var date = dateTime();
+
+  // The template used to construct the date input and to enable communication between user and date input.
+  var template = [[
+    { type: 'field', id: 'day', show: date.showDayName, push: date.pushDay, put: date.putDay },
+    { type: 'text', text: ' of ' },
+    { type: 'field', id: 'month', show: date.showMonthName, push: date.pushMonth, put: date.putMonth },
+    { type: 'text', text: ', ' },
+    { type: 'field', id: 'year', show: date.showYear, push: date.pushYear, put: date.putYear }
+  ]];
+  
+  // Create the driver input element
+  driveIn('.driver#date')
+    .template(template)
+    .domElement
+    .addEventListener('change', function(evt) { showResult(evt.detail.asData); });
+
+  // Show the result
+  function showResult(time) {
+    document.getElementById('result').textContent = JSON.stringify(time);
+  }
+
+}
+
+  </script>
+
+  </head>
+<body>
+
+  <h1>Chosing a Date in a Text</h1>
+  <div class="section">
+    The event is planned to take place on the <div class="driver" id="date"></div>.
+    Please enter the appropriate date above.
+    Watch your selection below as you click, type, or scroll.
+  </div>
+
+  <h3>Selected Date</h3>
+  <pre id="result"></pre>
+
+</body>
+</html>
