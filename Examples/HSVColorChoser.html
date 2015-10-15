@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>HSV Color Chooser</title>
+  <script type="text/javascript" src="../Scripts/DriveIn.js"></script>
+  <style>
+  body {
+    font-family: sans-serif;
+    margin: 40px;
+  }
+  h1, h2, h3, p {
+    color: #ccc;
+  }
+  .driver {
+    font-size: 24pt;
+    font-family: inherit;
+    font-weight: 300;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    outline: none;
+  }
+  .driver:hover {
+    cursor: default;
+  }
+  .driver>div {
+    text-align: center;
+  }
+  .field {
+    display: inline-block;
+    outline: none;
+  }
+  .field:hover {
+    cursor: pointer;
+  }
+  .field:focus {
+    color: #c00;
+  }
+  .view {
+    display: inline-block;
+  }
+  .text {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  ::selection {
+    background: white;
+  }
+  ::-moz-selection {
+    background: white;
+  }
+  </style>
+
+  <script>
+
+  
+  
+window.onload = function() {
+
+  /* accepts parameters
+   * h  Object = {h:x, s:y, v:z}
+   * OR 
+   * h, s, v
+  */
+  function HSVtoRGB(h, s, v) {
+    var r, g, b, i, f, p, q, t;
+    if (arguments.length === 1) {
+      s = h.s, v = h.v, h = h.h;
+    }
+    i = Math.floor(h * 6);
+    f = h * 6 - i;
+    p = v * (1 - s);
+    q = v * (1 - f * s);
+    t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+      case 0: r = v, g = t, b = p; break;
+      case 1: r = q, g = v, b = p; break;
+      case 2: r = p, g = v, b = t; break;
+      case 3: r = p, g = q, b = v; break;
+      case 4: r = t, g = p, b = v; break;
+      case 5: r = v, g = p, b = q; break;
+    }
+    return {
+      r: Math.round(r * 255),
+      g: Math.round(g * 255),
+      b: Math.round(b * 255)
+    };
+  }
+
+  // A user defined object used to store current settings and to provide access functions.
+  
+  function hsvHandler() {
+
+    var color = { h: 200, s: 80, v: 70 };
+
+    function limit(v, min, max) { return Math.max(min, Math.min(max, v)); };
+
+    function wrap(v, min, max) {
+      var d = max - min;
+      return min + ((v + d - min) % d);
+    };
+
+    var ext = {
+
+      showH: function() { return color.h; },
+      putH: function(h) { color.h = wrap(+h, 0, 360); },
+      pushH: function(dh) { color.h = wrap(color.h + dh, 0, 360); },
+  
+      showS: function() { return color.s; },
+      putS: function(s) { color.s = limit(+s, 0, 100); },
+      pushS: function(ds) { color.s = limit(color.s + ds, 0, 100); },
+  
+      showV: function() { return color.v; },
+      putV: function(v) { color.v = limit(+v, 0, 100); },
+      pushV: function(dv) { color.v = limit(color.v + dv, 0, 100); }
+
+    };
+    return ext;
+  }
+
+  var ch = hsvHandler();
+
+  // The template used to construct the driver input and to enable communication between user and driver input.
+  var template = [[
+    { type: 'text', text: 'Hue ' },
+    { type: 'field', id: 'h', show: ch.showH, push: ch.pushH, put: ch.putH },
+    { type: 'text', text: '°, Saturation ' },
+    { type: 'field', id: 's', show: ch.showS, push: ch.pushS, put: ch.putS },
+    { type: 'text', text: '%, Value ' },
+    { type: 'field', id: 'v', show: ch.showV, push: ch.pushV, put: ch.putV },
+    { type: 'text', text: '% ' },
+    { type: 'view', id: 'display', show: function() { return ''; } }
+  ]];
+  
+  // Create the driver input element
+  var ti = driveIn('.driver#hsv')
+    .template(template)
+    .domElement
+    .addEventListener('change', function(evt) { showResult(evt.detail.asData); });
+
+  // Convert RGB to gray equivalent
+  function rgbToGray(r, g, b) {
+    return 0.2989 * r + 0.5870 * g + 0.1140 * b;
+  }
+
+  // Show the color
+  function showResult(color) {
+    var rgb = HSVtoRGB(color.h / 360, color.s / 100, color.v / 100);
+    var hsv = document.getElementById('hsv');
+    hsv.style.background = 'rgb(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ')';
+    hsv.style.color = rgbToGray(rgb.r, rgb.g, rgb.b) > 127 ? 'black' : 'white';
+  }
+
+}
+
+  </script>
+
+  </head>
+<body>
+
+  <h1>HSV Color Chooser</h1>
+  <p>
+    Click, swipe and type to chose a color.
+  </p>
+  
+  <div class="driver" id="hsv"></div>
+
+</body>
+</html>
