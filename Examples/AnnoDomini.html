@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Calendar</title>
+  <script type="text/javascript" src="../Scripts/DriveIn.js"></script>
+  <script type="text/javascript" src="../Scripts/JulianDate.js"></script>
+  <style>
+  body {
+    font-family: sans-serif;
+    margin: 40px;
+  }
+  h1, h2, h3, p {
+    color: #ccc;
+  }
+  .typer {
+    font-size: 36pt;
+    font-family: inherit;
+    font-weight: 300;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    outline: none;
+  }
+  .typer:hover {
+    cursor: default;
+  }
+  .typer>div {
+    text-align: center;
+  }
+  .field {
+    display: inline-block;
+    outline: none;
+  }
+  .field:hover {
+    cursor: pointer;
+  }
+  .field:focus {
+    color: #c00;
+  }
+  #year::before {
+    content: "AD ";
+    color: #777;
+  }
+  #year::after {
+    content: " BC";
+    color: #777;
+  }
+  #year.ad-hidden::before {
+    display: none;
+  }
+  #year.bc-hidden::after {
+    display: none;
+  }
+  #time {
+    display: block;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  #result {
+    font-size: 13pt;
+    color: #24a;
+  }
+  ::selection {
+    background: #e4e4e4;
+  }
+  ::-moz-selection {
+    background: #e4e4e4;
+  }
+  </style>
+
+  <script>
+
+// The names of the months we are using.
+
+window.onload = function() {
+
+  var monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  function dateTime() {
+
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var day = date.getDate() + date.getHours() / 24 + date.getMinutes() / 1440 + date.getSeconds() / 86400;
+    var jd;
+    
+    setCurrentDate(year, month, day);
+    
+    function setCurrentDate(y, m, d) {
+      jd = JulianDate.ymd2jd(y, m, d);
+    }
+    
+    function getCurrentDate() {
+      return JulianDate.jd2ymd(jd);
+    }
+  
+    var pad = function(val) {
+      return '00'.concat(val).slice(-2);
+    }
+
+    var ext = {
+
+      showYear: function() {
+        var year = getCurrentDate().year;
+        var yearElement = document.querySelector('#year');
+        if (year > 0) {
+          yearElement.classList.remove('ad-hidden');
+          yearElement.classList.add('bc-hidden');
+        }
+        else {
+          yearElement.classList.remove('bc-hidden');
+          yearElement.classList.add('ad-hidden');
+        }
+        return year > 0 ? year : 1 - year;
+      },
+  
+      putYear: function(year) {
+        if (!isNaN(+year)) {
+          var d = getCurrentDate();
+          if (d.year < 1) {
+            year = 1 - year;
+          }
+          setCurrentDate(+year, d.month, d.day);
+        }
+      },
+  
+      pushYear: function(years) {
+        var d = getCurrentDate();
+        setCurrentDate(d.year + years, d.month, d.day);
+      },
+  
+      showMonth: function() {
+        return getCurrentDate().month;
+      },
+  
+      showMonthName: function() {
+        return monthNames[getCurrentDate().month - 1];
+      },
+  
+      putMonth: function(month) {
+        if (!isNaN(+month)) {
+          month = +month - 1;
+        }
+        else {
+          for (var i in monthNames) {
+            if (monthNames.hasOwnProperty(i)) {
+              var name = monthNames[i];
+              if (name.match(new RegExp('^' + month, 'i'))) {
+                month = i;
+                break;
+              }
+            }
+          }
+        }
+        if (!isNaN(+month)) {
+          var d = getCurrentDate();
+          setCurrentDate(d.year, +month + 1, d.day);
+        }
+      },
+  
+      pushMonth: function(months) {
+        var d = getCurrentDate();
+        setCurrentDate(d.year, d.month + months, d.day);
+      },
+  
+      showDay: function() {
+        return getCurrentDate().day | 0;
+      },
+  
+      putDay: function(day) {
+        if (!isNaN(+day)) {
+          var d = getCurrentDate();
+          setCurrentDate(d.year, d.month, +day + (d.day % 1));
+        }
+      },
+  
+      pushDay: function(days) {
+        jd += days;
+      },
+
+      showHours: function() {
+        var d = getCurrentDate();
+        var h =  (24 * (d.day - (d.day | 0))) | 0;
+        return pad(h);
+      },
+    
+      putHours: function(hours) {
+        if (!isNaN(+hours)) {
+          var d = getCurrentDate();
+          var h = ((24 * d.day) % 24) | 0;
+          jd += (hours - h) / 24;
+        }
+      },
+    
+      pushHours: function(hours) {
+        jd += hours / 24;
+      },
+    
+      showMinutes: function() {
+        var d = getCurrentDate();
+        var m =  (60 * ((24 * d.day) % 1)) | 0;
+        return pad(m);
+      },
+    
+      putMinutes: function(minutes) {
+        if (!isNaN(+minutes)) {
+          var d = getCurrentDate();
+          var m = ((1440 * d.day) % 60) | 0;
+          jd += (minutes - m) / 1440;
+        }
+      },
+    
+      pushMinutes: function(minutes) {
+        jd += minutes / 1440;
+      },
+    
+      showSeconds: function() {
+        var d = getCurrentDate();
+        var s =  (60 * ((1440 * d.day) % 1)) | 0;
+        return pad(s);
+      },
+    
+      putSeconds: function(seconds) {
+        if (!isNaN(+seconds)) {
+          var d = getCurrentDate();
+          var s = ((86400 * d.day) % 60) | 0;
+          jd += (seconds - s) / 86400;
+        }
+      },
+    
+      pushSeconds: function(seconds) {
+        jd += seconds / 86400;
+      },
+
+      getJulianDate: function() {
+        return jd;
+      }
+    
+    };
+    return ext;
+  }
+
+  var date = dateTime();
+    
+  // The template used to construct the input control and to enable communication between user and the input control.
+  var template = [[
+    { type: 'field', id: 'year', show: date.showYear, push: date.pushYear, put: date.putYear },
+    { type: 'text', text: ', ' },
+    { type: 'field', id: 'month', show: date.showMonthName, push: date.pushMonth, put: date.putMonth },
+    { type: 'text', text: ' ' },
+    { type: 'field', id: 'day', show: date.showDay, push: date.pushDay, put: date.putDay },
+    { type: 'text', text: ', ' },
+    { type: 'field', id: 'hours', show: date.showHours, push: date.pushHours, put: date.putHours },
+    { type: 'text', text: ':' },
+    { type: 'field', id: 'minutes', show: date.showMinutes, push: date.pushMinutes, put: date.putMinutes },
+    { type: 'text', text: ':' },
+    { type: 'field', id: 'seconds', show: date.showSeconds, push: date.pushSeconds, put: date.putSeconds }
+  ]];
+
+  // Create the typer input element
+  driveIn('.typer#time')
+    .template(template)
+    .domElement
+    .addEventListener('change', function(evt) { showResult(evt.detail.asData); });
+
+  // Show the result
+  function showResult(time) {
+    // document.getElementById('result').textContent = JSON.stringify(time);
+    document.getElementById('result').textContent = date.getJulianDate().toFixed(5);
+  }
+  
+}
+
+  </script>
+
+</head>
+<body>
+
+  <h1>Anno Domini</h1>
+  <p>
+    This calendar considers the Julian Calendar before 1582, October 15,
+    and changes to BC before AD 1.
+  </p>
+  
+  <div class="typer" id="time"></div>
+
+  <h3>Julian Date</h3>
+  <pre id="result"></pre>
+
+</body>
+</html>
