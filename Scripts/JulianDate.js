@@ -27,7 +27,7 @@
     jd += 0.5;
     var z = jd | 0;
     var f = jd - z;
-    var a = 0;
+    var a;
     if (z < 2299161) {
       a = z;
     }

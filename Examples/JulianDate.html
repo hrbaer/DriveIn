@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Julian Date</title>
+  <script type="text/javascript" src="../Scripts/DriveIn.js"></script>
+  <script type="text/javascript" src="../Scripts/JulianDate.js"></script>
+  <style>
+  body {
+    font-family: sans-serif;
+    margin: 40px;
+  }
+  h1, h2, h3, p {
+    color: #ccc;
+  }
+  .typer {
+    font-size: 36pt;
+    font-family: inherit;
+    font-weight: 300;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    outline: none;
+  }
+  .typer:hover {
+    cursor: default;
+  }
+  .typer>div {
+    text-align: center;
+  }
+  .field {
+    display: inline-block;
+    outline: none;
+  }
+  .field:hover {
+    cursor: pointer;
+  }
+  .field:focus {
+    color: #c00;
+  }
+  #year::before {
+    content: "AD ";
+    color: #777;
+  }
+  #year::after {
+    content: " BC";
+    color: #777;
+  }
+  #year.ad-hidden::before {
+    display: none;
+  }
+  #year.bc-hidden::after {
+    display: none;
+  }
+  #time {
+    display: block;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  #result {
+    font-size: 13pt;
+    color: #24a;
+  }
+  ::selection {
+    background: #e4e4e4;
+  }
+  ::-moz-selection {
+    background: #e4e4e4;
+  }
+  </style>
+
+  <script>
+
+// The names of the months we are using.
+
+window.onload = function() {
+
+  var monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  function dateTime() {
+
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var day = date.getDate() + date.getHours() / 24 + date.getMinutes() / 1440 + date.getSeconds() / 86400;
+    var jd;
+    
+    setCurrentDate(year, month, day);
+    
+    function setCurrentDate(y, m, d) {
+      jd = JulianDate.ymd2jd(y, m, d);
+    }
+    
+    function pad2(v) {
+      return ('00' + v).slice(-2);
+    }
+    
+    var ext = {
+
+      show765: function() {
+        return (jd / 10000) | 0;
+      },
+  
+      put765: function(days) {
+        ext.push765((days - ext.show765()));
+      },
+  
+      push765: function(days) {
+        jd += 10000 * days
+      },
+  
+      show43: function() {
+        return pad2(((jd / 100) % 100) | 0);
+      },
+  
+      put43: function(days) {
+        ext.push43((days - ext.show43()));
+      },
+  
+      push43: function(days) {
+        jd += 100 * days;
+      },
+  
+      show21: function() {
+        return pad2((jd % 100) | 0);
+      },
+  
+      put21: function(days) {
+        ext.push21((days - ext.show21()));
+      },
+  
+      push21: function(days) {
+        console.log('push21', days);
+        jd += days;
+      },
+  
+      show12: function() {
+        return pad2(((100 * jd) % 100) | 0);
+      },
+  
+      put12: function(days) {
+        ext.push12((days - ext.show12()));
+      },
+  
+      push12: function(days) {
+        console.log('days', days);
+        jd += 0.01 * days;
+      },
+  
+      show34: function() {
+        return pad2(((10000 * jd) % 100) | 0);
+      },
+  
+      put34: function(days) {
+        ext.push34((days - ext.show34()));
+      },
+  
+      push34: function(days) {
+        jd += 0.0001 * days;
+      },
+      
+      show56: function() {
+        return pad2(((1000000 * jd) % 100) | 0);
+      },
+  
+      put56: function(days) {
+        ext.push56((days - ext.show56()));
+      },
+  
+      push56: function(days) {
+        jd += 0.000001 * days;
+      },
+      
+      getDate: function() {
+        return JulianDate.jd2ymd(jd);
+      }
+
+    };
+    return ext;
+  }
+
+  var date = dateTime();
+    
+  // The template used to construct the input control and to enable communication between user and the input control.
+  var template = [[
+    { type: 'field', id: 'days765', show: date.show765, push: date.push765, put: date.put765 },
+    { type: 'field', id:  'days43', show: date.show43,  push: date.push43,  put: date.put43  },
+    { type: 'field', id:  'days21', show: date.show21,  push: date.push21,  put: date.put21  },
+    { type: 'text', text: '.' },
+    { type: 'field', id:  'days12', show: date.show12,  push: date.push12,  put: date.put12  },
+    { type: 'field', id:  'days34', show: date.show34,  push: date.push34,  put: date.put34  },
+    { type: 'field', id:  'days56', show: date.show56,  push: date.push56,  put: date.put56  },
+  ]];
+
+  // Create the typer input element
+  driveIn('.typer#time')
+    .template(template)
+    .domElement
+    .addEventListener('change', function(evt) { showResult(evt.detail.asData); });
+
+  // Show the result
+  function showResult(time) {
+    // document.getElementById('result').textContent = JSON.stringify(time);
+    var d = date.getDate();
+    // console.log(d);
+    document.getElementById('result').textContent = 
+    new Date(Date.UTC(
+      d.year, d.month - 1, d.day,
+      (((d.day * 24) % 24) | 0),
+      (((d.day * 1440) % 60) | 0),
+      (((d.day * 86400) % 60) | 0)
+    ));
+  }
+  
+}
+
+  </script>
+
+</head>
+<body>
+
+  <h1>Julian Date</h1>
+  <p>
+  </p>
+  
+  <div class="typer" id="time"></div>
+
+  <h3>Julian Date</h3>
+  <pre id="result"></pre>
+
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Resistor</title>
+  <script type="text/javascript" src="../Scripts/DriveIn.js"></script>
+  <style>
+  body {
+    font-family: sans-serif;
+    margin: 40px;
+  }
+  h1, h2, h3, p {
+    color: #ccc;
+  }
+  .driver {
+    font-size: 8pt;
+    font-family: "Courier New", monospace;
+    font-weight: 300;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    display: inline-block;
+    background: #eee;
+    margin: 32px 0px 32px 0px;
+    padding: 0px 20px 0px 20px;
+  }
+  .driver:hover {
+    cursor: default;
+  }
+  .field {
+    display: inline-block;
+    outline: none;
+    margin: 0px 5px 0px 5px;
+    color: transparent;
+    background: black;
+    width: 20px;
+    height: 60px;
+  }
+  .field#space {
+    background: transparent;
+    width: 40px;
+  }
+  .field#code-3 {
+    margin-left: 50px;
+  }
+  .field.m0 {
+    background: #000;
+  }
+  .field.m1 {
+    background: #840;
+  }
+  .field.m2 {
+    background: #d00;
+  }
+  .field.m3 {
+    background: #fa0;
+  }
+  .field.m4 {
+    background: #fd0;
+  }
+  .field.m5 {
+    background: #0a0;
+  }
+  .field.m6 {
+    background: #04d;
+  }
+  .field.m7 {
+    background: #c0b;
+  }
+  .field.m8 {
+    background: #aaa;
+  }
+  .field.m9 {
+    background: #fff;
+  }
+  .field.m-1 {
+    background: linear-gradient(to bottom, #ccc, #f4f4f4 30%, #ccc);
+  }
+  .field.m-2 {
+    background: linear-gradient(to bottom, #fc8, #ff8 30%, #fc8);
+  }
+  .field.t0 {
+    outline: 1px solid #ccc;
+    background: transparent;
+  }
+  .field.t1 {
+    background: linear-gradient(to bottom, #ccc, #f4f4f4 30%, #ccc);
+  }
+  .field.t2 {
+    background: linear-gradient(to bottom, #fc8, #ff8 30%, #fc8);
+  }
+  .field.t3 {
+    background: #d00;
+  }
+  .field:hover {
+    cursor: pointer;
+  }
+  .field:focus {
+  }
+  .view {
+    display: inline-block;
+  }
+  #date {
+    display: inline-block;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  #result {
+    font-size: 18pt;
+    color: #24a;
+  }
+  ::selection {
+    background: transparent;
+  }
+  ::-moz-selection {
+    background: #e4e4e4;
+  }
+  </style>
+
+  <script>
+
+  
+String.prototype.replaceAt = function(index, character) {
+    return this.substr(0, index) + character + this.substr(index + character.length);
+}
+
+window.onload = function() {
+
+  // A user defined object used to store current settings and to provide access functions.
+  
+  function resistorHandler() {
+
+    var rBase = 68, rExp = 3, rTol = 1;
+
+    function wrap(n, from, to) {
+      var d = to - from;
+      while (n < from) { n += d };
+      while (n >= to  ) { n -= d };
+      return n
+    }
+    
+    function addClass(element, pre, cls) {
+      element.classList.add(pre + cls);
+    }
+    
+    function removeClass(element, pre, cls) {
+      element.classList.remove(pre + cls);
+    }
+    
+    function showCode0() {
+      return (rBase / 10) | 0;
+    }
+    
+    function showCode1() {
+      return rBase % 10;;
+    }
+    
+    function pushBase(d) {
+      var field0 = document.getElementById('code-0');
+      var field1 = document.getElementById('code-1');
+      removeClass(field0, 'm', showCode0());
+      removeClass(field1, 'm', showCode1());
+      rBase = wrap(rBase + d, 10, 100);
+      addClass(field0, 'm', showCode0());
+      addClass(field1, 'm', showCode1());
+    }
+    
+    function pushExp(d) {
+      var field2 = document.getElementById('code-2');
+      removeClass(field2, 'm', rExp);
+      rExp = wrap(rExp + d, -2, 10);
+      addClass(field2, 'm', rExp);
+    }
+    
+    function pushTol(d) {
+      var field3 = document.getElementById('code-3');
+      removeClass(field3, 't', rTol);
+      rTol = wrap(rTol + d, 0, 4);
+      addClass(field3, 't', rTol);
+    }
+
+    var ext = {
+
+      showCode0: function() { return showCode0() },
+      pushCode0: function(d) { pushBase(10 * d) },
+      putCode0: function(b) {},
+  
+      showCode1: function() { return showCode1(); },
+      pushCode1: function(d) { pushBase(d) },
+      putCode1: function(b) {},
+  
+      showCode2: function() { return rExp; },
+      pushCode2: function(d) { pushExp(d) },
+      putCode2: function(b) {},
+  
+      showCode3: function() { return rTol; },
+      pushCode3: function(d) { pushTol(d) },
+      putCode3: function(b) {},
+
+      getResistance: function() {
+        var units = [ 'Ω', 'KΩ', 'MΩ', 'GΩ' ];
+        var index = (rExp / 3) | 0;
+        var base = 3 * index;
+        var places = Math.max(0, -rExp);
+        return '' + (rBase * Math.pow(10, rExp - base)).toFixed(places) + ' ' + units[index];
+      },
+      
+      getTolerance: function() {
+        return [20, 10, 5, 2][rTol];
+      },
+      
+      update: function() {
+        pushBase(0);
+        pushExp(0);
+        pushTol(0);
+      }
+    };
+
+    return ext;
+  }
+
+  var rh = resistorHandler();
+
+  // The template used to construct the typer input and to enable communication between user and typer input.
+  var template = [[
+    { type: 'field', id: 'code-0', show: rh.showCode0, push: rh.pushCode0, put: rh.putCode0 },
+    { type: 'field', id: 'code-1', show: rh.showCode1, push: rh.pushCode1, put: rh.putCode1 },
+    { type: 'field', id: 'code-2', show: rh.showCode2, push: rh.pushCode2, put: rh.putCode2 },
+    { type: 'field', id: 'code-3', show: rh.showCode3, push: rh.pushCode3, put: rh.putCode3 }
+   ]];
+  
+  // Create the typer input element
+  var hi = driveIn('.driver#resistor')
+    .template(template)
+    .domElement
+    .addEventListener('change', function(evt) { showResult(evt.detail.asData); });
+
+  rh.update();
+
+  // Show the result
+  function showResult(v) {
+    document.querySelector('#result').textContent = rh.getResistance() + ', ±' + rh.getTolerance() + '%';
+  }
+
+}
+
+  </script>
+
+  </head>
+<body>
+
+  <h1>Resistor Color Codes</h1>
+  <p>
+    Quickly determine color-coded electrical resistance by clicking and scrolling.
+  </p>
+  
+  <div class="driver" id="resistor"></div>
+
+  <h3>Resistance</h3>
+  <div id="result"></div>
+
+</body>
+</html>
