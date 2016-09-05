@@ -15,6 +15,9 @@
 
   Version 1.12
   15. 10. 2015
+
+  Version 1.13
+  05. 09. 2016
 */
 
 +function(global) {
@@ -34,6 +37,11 @@
     // Number of pixels for one unit.
     var HPIXELS = 22, VPIXELS = 7;
     
+    // Remove children
+    while (driveInput.firstChild) {
+      driveInput.removeChild(driveInput.firstChild);
+    }
+
     // Is element visible?
     function isVisible(element) {
       return window.getComputedStyle(element).display !== 'none';
@@ -123,6 +131,14 @@
           default:
             needsUpdate = true;
             break;
+        }
+      });
+
+      // Update previous active field
+      field.addEventListener('mousedown', function(evt) {
+        var field = document.activeElement;
+        if (field && field != this) {
+          setField(field);
         }
       });
 
@@ -227,7 +243,6 @@
             field.id = v.id;
             field.classList.add(v.type);
             field.contentEditable = true;
-            // field.textContent = v.show();
             field.__params__ = v;
             field.__params__.transform = transformer(horizontalScroller, verticalScroller);
             container.appendChild(field);
@@ -237,7 +252,6 @@
             var view = document.createElement('div');
             if (v.id != undefined) { view.id = v.id }
             view.classList.add(v.type);
-            // view.textContent = v.show();
             view.__params__ = v;
             container.appendChild(view);
             break;
@@ -248,7 +262,6 @@
           case 'html':
             var html = document.createElement('div');
             html.classList.add(v.type);
-            // html.innerHTML = v.show();
             html.__params__ = v;
             container.appendChild(html);
             break;
@@ -264,8 +277,10 @@
     // Sends the field's current value to the external function
     function setField(field) {
       var params = field.__params__;
-      params.put(field.textContent);
-      update(field.parentElement);
+      if (params) {
+        params.put(field.textContent);
+        update(field.parentElement);
+      }
     }
     
     function getAllElements(parent, selector) {
