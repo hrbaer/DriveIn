@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Hex Number Editing</title>
+  <script type="text/javascript" src="../Scripts/DriveIn.js"></script>
+  <style>
+  body {
+    font-family: "HelveticaNeue", sans-serif;
+    margin: 40px;
+  }
+  h1, h2, h3, p {
+    color: #ccc;
+  }
+  .driver {
+    font-size: 72pt;
+    font-weight: 300;
+    outline: none;
+  }
+  .driver:hover {
+    cursor: default;
+  }
+  .field {
+    display: inline-block;
+    outline: none;
+  }
+  .field:hover {
+    cursor: pointer;
+  }
+  .field:focus {
+    color: #c00;
+  }
+  .view {
+    display: inline-block;
+  }
+  #date {
+    display: inline-block;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  #result {
+    font-size: 13pt;
+    color: #24a;
+  }
+  ::selection {
+    background: #e4e4e4;
+  }
+  ::-moz-selection {
+    background: #e4e4e4;
+  }
+  </style>
+
+  <script>
+
+  
+String.prototype.replaceAt = function(index, character) {
+  return this.substr(0, index) + character + this.substr(index + character.length);
+}
+
+window.onload = function() {
+
+  function WaveGenerator() {
+
+    console.log('Wave generator', new Date());
+    
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+
+    var audioContext = new AudioContext();
+    console.log(audioContext);
+    
+    var oscillator = audioContext.createOscillator();
+    oscillator.connect(audioContext.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 440;
+
+    oscillator.start();
+    
+    return {
+      setFrequency(f) {
+        console.log(f);
+        oscillator.frequency.value = f;
+      }
+    };
+  }
+  
+  
+  const STANDARDPITCH = 440;
+  var generator = WaveGenerator();
+  generator.setFrequency(STANDARDPITCH);
+
+
+  // A user defined object used to store current settings and to provide access functions.
+  
+  function decHandler(freq) {
+
+    const PLACEHOLDER = '00000';
+    const MINFREQ = 1;
+    const MAXFREQ = 20000;
+    var num = PLACEHOLDER;
+
+    keepWithinRange(freq);
+    
+    function showDigit(offset) {
+      return num.charAt(offset);
+    }
+
+    function putDigit(d, offset) {
+      d = parseDigit(d);
+      if (!isNaN(d)) {
+        num = num.replaceAt(offset, d.toString(10));
+        keepWithinRange(parseInt(num, 10));
+      }
+    }
+
+    function pushDigit(d, offset) {
+      var value = parseInt(num, 10) + d * Math.pow(10, PLACEHOLDER.length - 1 - offset);
+      keepWithinRange(value);
+    }
+
+    function parseDigit(d) {
+      return Math.min(10, Math.max(0, parseInt(d, 10)));
+    }
+
+    function padNumber(n) {
+      return (PLACEHOLDER + n).slice(-PLACEHOLDER.length);
+    }
+
+    function keepWithinRange(value) {
+      num = padNumber(Math.max(MINFREQ, Math.min(MAXFREQ, value)));
+    }
+
+    var ext = {
+
+      showDigit0: function() { return showDigit(0); },
+      pushDigit0: function(d) { pushDigit(d, 0); },
+      putDigit0: function(b) { putDigit(b, 0) },
+  
+      showDigit1: function() { return showDigit(1); },
+      pushDigit1: function(d) { pushDigit(d, 1); },
+      putDigit1: function(b) { putDigit(b, 1) },
+  
+      showDigit2: function() { return showDigit(2); },
+      pushDigit2: function(d) { pushDigit(d, 2); },
+      putDigit2: function(b) { putDigit(b, 2) },
+  
+      showDigit3: function() { return showDigit(3); },
+      pushDigit3: function(d) { pushDigit(d, 3); },
+      putDigit3: function(b) { putDigit(b, 3) },
+
+      showDigit4: function() { return showDigit(4); },
+      pushDigit4: function(d) { pushDigit(d, 4); },
+      putDigit4: function(b) { putDigit(b, 4) },
+
+      getNum: function() { return parseInt(num, 10); }
+    };
+
+    return ext;
+  }
+
+  var hh = decHandler(STANDARDPITCH);
+
+  // The template used to construct the typer input and to enable communication between user and typer input.
+  var template = [[
+    { type: 'field', id: 'digit-0', show: hh.showDigit0, push: hh.pushDigit0, put: hh.putDigit0 },
+    { type: 'field', id: 'digit-1', show: hh.showDigit1, push: hh.pushDigit1, put: hh.putDigit1 },
+    { type: 'field', id: 'digit-2', show: hh.showDigit2, push: hh.pushDigit2, put: hh.putDigit2 },
+    { type: 'field', id: 'digit-3', show: hh.showDigit3, push: hh.pushDigit3, put: hh.putDigit3 },
+    { type: 'field', id: 'digit-4', show: hh.showDigit4, push: hh.pushDigit4, put: hh.putDigit4 },
+    { type: 'text', text: ' Hz' },
+   ]];
+  
+  // Create the typer input element
+  var hi = driveIn('.driver#freq')
+    .template(template)
+    .domElement
+    .addEventListener('change', function(evt) { showResult(evt.detail.asData); });
+
+  // Show the result
+  function showResult(v) {
+    var freq = hh.getNum();
+    generator.setFrequency(freq);
+  }
+
+}
+
+  </script>
+
+  </head>
+<body>
+
+  <h1>Sine-Wave Generator</h1>
+  <p>
+    Fast frequency selection by clicking, scrolling and typing.
+  </p>
+  
+  <div class="driver" id="freq"></div>
+
+</body>
+</html>
