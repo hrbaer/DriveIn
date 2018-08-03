@@ -171,7 +171,7 @@
       
       // Event handling for touch screens
       field.addEventListener("touchstart", function(evt) {
-        var touch = event.touches[0];
+        var touch = evt.touches[0];
         lastPos = { x: touch.screenX, y: touch.screenY };
         setSelectionRange(this);
         evt.preventDefault();
@@ -183,7 +183,7 @@
     
       // Changing values by touch motion
       field.addEventListener("touchmove", function(evt) {
-        var touch = event.touches[0];
+        var touch = evt.touches[0];
         var dx = lastPos.x - touch.screenX;
         var dy = touch.screenY - lastPos.y;
         if (this.__params__) {
